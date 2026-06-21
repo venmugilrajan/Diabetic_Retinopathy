@@ -23,3 +23,11 @@ tenv/
 .idea/
 .system_generated/
 *.log
+
+# Next.js / Node
+node_modules/
+.next/
+out/
+.env*.local
+dist/
+

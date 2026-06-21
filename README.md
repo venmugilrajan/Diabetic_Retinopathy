@@ -51,4 +51,38 @@ Run the local web server:
 ```bash
 python app.py
 ```
-Open the local URL in your browser: `http://127.0.0.1:7861` to upload scans and review diagnostic assessments.
+Open the local URL in your browser: `http://127.0.0.1:7860` to upload scans and review diagnostic assessments.
+
+---
+
+## 🎨 Premium Next.js Frontend (Vercel Ready)
+
+We have built a premium, modern React/Next.js dashboard inside the `frontend/` directory. This frontend features a futuristic retina diagnostic style, drag-and-drop file inputs, scanning animations, and detailed diagnostic graphs.
+
+### Local Setup
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Connecting Frontend to Backend
+- Click on the **Backend API** button at the top right of the dashboard.
+- Enter your running backend's endpoint URL (e.g., your local `http://localhost:7860` or your Hugging Face Space URL like `https://username-space-name.hf.space`).
+- Click **Save Changes**.
+
+### 🚀 Hosting on Vercel
+1. Push your repository to GitHub, GitLab, or Bitbucket.
+2. Go to [Vercel](https://vercel.com/) and click **Add New Project**.
+3. Select your repository.
+4. Set the **Root Directory** of the project to `frontend`.
+5. Click **Deploy**. Vercel will automatically build and publish your Next.js application.
+
