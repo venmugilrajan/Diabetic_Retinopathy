@@ -13,9 +13,9 @@ export default function Home() {
   const [explanation, setExplanation] = useState('');
   const [error, setError] = useState(null);
   
-  // Settings
-  const [apiEndpoint, setApiEndpoint] = useState('http://localhost:7860');
-  const [tempEndpoint, setTempEndpoint] = useState('http://localhost:7860');
+  // Settings - default to user's Hugging Face Space
+  const [apiEndpoint, setApiEndpoint] = useState('venmugilrajan/Diabetic_Retinopathy');
+  const [tempEndpoint, setTempEndpoint] = useState('venmugilrajan/Diabetic_Retinopathy');
   const [showSettings, setShowSettings] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
 
@@ -91,27 +91,37 @@ export default function Home() {
     setError(null);
 
     try {
-      const cleanEndpoint = apiEndpoint.replace(/\/$/, '');
-      const response = await fetch(`${cleanEndpoint}/api/predict`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          data: [image]
-        }),
-      });
+      // Convert base64 data URL to Blob for Gradio Client upload
+      const base64Response = await fetch(image);
+      const blob = await base64Response.blob();
 
-      if (!response.ok) {
-        throw new Error(`Server returned status ${response.status}. Please make sure your Gradio backend at ${apiEndpoint} is running and has CORS enabled.`);
-      }
+      // Dynamically import @gradio/client to prevent SSR issues during build
+      const { Client } = await import('@gradio/client');
+      
+      // Connect to local port or Hugging Face Space path
+      const client = await Client.connect(apiEndpoint);
+      
+      // Execute prediction
+      const resData = await client.predict("/predict", [blob]);
 
-      const resData = await response.json();
       if (resData && resData.data && resData.data.length >= 2) {
-        setResults(resData.data[0]);
+        // Extract output structures
+        const rawResults = resData.data[0];
+        
+        // Format prediction results dict
+        let probDict = {};
+        if (rawResults && rawResults.confidences) {
+          rawResults.confidences.forEach(item => {
+            probDict[item.label] = item.confidence;
+          });
+        } else if (typeof rawResults === 'object') {
+          probDict = rawResults;
+        }
+        
+        setResults(probDict);
         setExplanation(resData.data[1]);
       } else {
-        throw new Error('Unexpected response format from Gradio API. Make sure the backend is app.py.');
+        throw new Error('Unexpected response format from Gradio API. Make sure the backend is running correctly.');
       }
     } catch (err) {
       console.error(err);
