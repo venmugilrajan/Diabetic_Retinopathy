@@ -3,10 +3,23 @@
 An end-to-end deep learning pipeline to classify Diabetic Retinopathy severity from retinal fundus images using PyTorch, EfficientNet-B3, Focal Loss, and Gradio.
 
 ## 📁 Project Structure
-* `code.ipynb` - Jupyter notebook containing EDA, data pipeline, training, and evaluation.
-* `app.py` - Gradio web interface serving the trained model.
-* `best_diabetic_retinopathy_model.pth` - Saved model weights checkpoint.
-* `requirements.txt` - Python package dependencies list.
+```
+r:\diabetic retinopathy\
+├── diabetes-re\                      # Labeled Retina Dataset
+│   ├── train.csv                     # Image names & diagnoses
+│   └── colored_images\               # Preprocessed image subfolders
+│       ├── No_DR\                    # Severity 0
+│       ├── Mild\                     # Severity 1
+│       ├── Moderate\                 # Severity 2
+│       ├── Severe\                   # Severity 3
+│       └── Proliferate_DR\           # Severity 4
+│
+├── code.ipynb                        # EDA, Preprocessing, Training & Evaluation Notebook
+├── app.py                            # Gradio Web Server Dashboard interface
+├── best_diabetic_retinopathy_model.pth # Saved model weights checkpoint (Ignored in Git)
+├── requirements.txt                  # Python dependencies list
+└── README.md                         # Project documentation
+```
 
 ## 🛠️ Setup & Installation
 1. Install dependencies:
