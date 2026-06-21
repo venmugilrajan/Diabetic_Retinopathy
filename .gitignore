@@ -1,4 +1,8 @@
-# Ignore model checkpoint weights (too large for GitHub)
+# Ignore dataset
+diabetes-re/
+diabetic retinopathy/
+
+# Ignore model weights
 *.pth
 *.pt
 *.h5
