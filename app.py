@@ -118,7 +118,7 @@ with gr.Blocks(theme="soft") as demo:
     
     with gr.Row():
         with gr.Column(scale=1):
-            input_image = gr.Image(label="Upload Retina Scan")
+            input_image = gr.Image(label="Upload Retina Scan", sources=["upload", "clipboard"])
             submit_btn = gr.Button("Analyze Image", variant="primary")
             
         with gr.Column(scale=1):

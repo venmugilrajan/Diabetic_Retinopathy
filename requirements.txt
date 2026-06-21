@@ -7,5 +7,5 @@ pillow
 matplotlib
 seaborn
 tqdm
-gradio
+huggingface-hub>=0.33.5
 opencv-python
