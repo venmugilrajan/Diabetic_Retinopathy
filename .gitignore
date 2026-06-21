@@ -1,0 +1,25 @@
+# Ignore dataset
+diabetes-re/
+diabetic retinopathy/
+
+# Ignore model checkpoint weights (too large for GitHub)
+*.pth
+*.pt
+*.h5
+
+# Python cache & virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+.venv/
+env/
+venv/
+tenv/
+
+# IDE configurations
+.vscode/
+.idea/
+.system_generated/
+*.log

@@ -1,0 +1,3 @@
+image,Severity Predictions,timestamp
+.gradio\flagged\image\4076d23431cc2def5aa0\images.jpg,"{""label"": ""Severe"", ""confidences"": [{""label"": ""Severe"", ""confidence"": 0.3747921884059906}, {""label"": ""Proliferate_DR"", ""confidence"": 0.2882363498210907}, {""label"": ""Moderate"", ""confidence"": 0.19561822712421417}, {""label"": ""Mild"", ""confidence"": 0.124710313975811}, {""label"": ""No_DR"", ""confidence"": 0.01664295606315136}]}",2026-06-21 12:12:16.357667
+,"{""label"": null, ""confidences"": null}",2026-06-21 12:14:54.669990
