@@ -1,11 +1,22 @@
+---
+title: Diabetic Retinopathy Diagnostic System
+emoji: 👁️
+colorFrom: blue
+colorTo: indigo
+sdk: gradio
+sdk_version: 4.26.0
+app_file: app.py
+pinned: false
+license: mit
+---
+
 # 👁️ Diabetic Retinopathy Classification System
 
 An end-to-end deep learning pipeline to classify Diabetic Retinopathy severity from retinal fundus images using PyTorch, EfficientNet-B3, Focal Loss, and Gradio.
 
 ## 📁 Project Structure
 ```
-r:\diabetic retinopathy\
-├── diabetes-re\                      # Labeled Retina Dataset
+├── diabetes-re\                      # Labeled Retina Dataset (Ignored in Spaces)
 │   ├── train.csv                     # Image names & diagnoses
 │   └── colored_images\               # Preprocessed image subfolders
 │       ├── No_DR\                    # Severity 0
@@ -16,7 +27,7 @@ r:\diabetic retinopathy\
 │
 ├── code.ipynb                        # EDA, Preprocessing, Training & Evaluation Notebook
 ├── app.py                            # Gradio Web Server Dashboard interface
-├── best_diabetic_retinopathy_model.pth # Saved model weights checkpoint (Ignored in Git)
+├── best_diabetic_retinopathy_model.pth # Saved model weights checkpoint
 ├── requirements.txt                  # Python dependencies list
 └── README.md                         # Project documentation
 ```
