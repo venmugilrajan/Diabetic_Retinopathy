@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Eye, Upload, Settings, X, ShieldAlert, CheckCircle, Activity, Info, BarChart2 } from 'lucide-react';
+import { Eye, Upload, Settings, X, ShieldAlert, CheckCircle, Activity, Info, BarChart2, Sun, Moon } from 'lucide-react';
 import styles from './page.module.css';
 
 export default function Home() {
@@ -18,15 +18,27 @@ export default function Home() {
   const [tempEndpoint, setTempEndpoint] = useState('venmugilrajan/Diabetic_Retinopathy');
   const [showSettings, setShowSettings] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [theme, setTheme] = useState('dark');
 
-  // Load endpoint from localStorage on mount
+  // Load theme and endpoint from localStorage on mount
   useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
     const saved = localStorage.getItem('dr_api_endpoint');
     if (saved) {
       setApiEndpoint(saved);
       setTempEndpoint(saved);
     }
   }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
 
   const saveSettings = () => {
     localStorage.setItem('dr_api_endpoint', tempEndpoint);
@@ -214,6 +226,14 @@ export default function Home() {
             <span className={styles.badge}>v1.0</span>
           </div>
           <div className={styles.headerActions}>
+            <button 
+              className={styles.themeToggleBtn}
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label="Toggle Theme"
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
             <button 
               className={styles.settingsBtn}
               onClick={() => setShowSettings(true)}
