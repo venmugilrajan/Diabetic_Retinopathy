@@ -91,33 +91,26 @@ export default function Home() {
     setError(null);
 
     try {
-      // Helper function to convert base64/data URL to Blob without using fetch
-      const dataURLtoBlob = (dataurl) => {
-        const arr = dataurl.split(',');
-        const mime = arr[0].match(/:(.*?);/)[1];
-        const bstr = atob(arr[1]);
-        let n = bstr.length;
-        const u8arr = new Uint8Array(n);
-        while (n--) {
-          u8arr[n] = bstr.charCodeAt(n);
-        }
-        return new Blob([u8arr], { type: mime });
-      };
+      const response = await fetch('/api/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image,
+          apiEndpoint,
+        }),
+      });
 
-      const blob = dataURLtoBlob(image);
+      const resJson = await response.json();
 
-      // Dynamically import @gradio/client to prevent SSR issues during build
-      const { Client } = await import('@gradio/client');
-      
-      // Connect to local port or Hugging Face Space path
-      const client = await Client.connect(apiEndpoint);
-      
-      // Execute prediction
-      const resData = await client.predict("/predict", [blob]);
+      if (!response.ok) {
+        throw new Error(resJson.error || 'Prediction failed');
+      }
 
-      if (resData && resData.data && resData.data.length >= 2) {
+      if (resJson && resJson.data && resJson.data.length >= 2) {
         // Extract output structures
-        const rawResults = resData.data[0];
+        const rawResults = resJson.data[0];
         
         // Format prediction results dict
         let probDict = {};
@@ -130,21 +123,16 @@ export default function Home() {
         }
         
         setResults(probDict);
-        setExplanation(resData.data[1]);
+        setExplanation(resJson.data[1]);
       } else {
-        throw new Error('Unexpected response format from Gradio API. Make sure the backend is running correctly.');
+        throw new Error('Unexpected response format from backend API.');
       }
     } catch (err) {
       console.error(err);
       let errMsg = err.message || 'Unknown connection error';
       
-      // Add detailed context to the error message for troubleshooting
       if (apiEndpoint.includes('localhost') || apiEndpoint.includes('127.0.0.1')) {
-        if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-          errMsg = `Mixed Content Blocked: Cannot connect to HTTP local backend ("${apiEndpoint}") from an HTTPS site. Please use a Hugging Face Space or run the frontend locally.`;
-        } else {
-          errMsg = `Failed to connect to local backend at "${apiEndpoint}". Make sure your Python server is running (python app.py) and CORS is enabled.`;
-        }
+        errMsg = `Failed to connect to local backend at "${apiEndpoint}". Make sure your Python server is running (python app.py) and CORS is enabled. Details: ${errMsg}`;
       } else {
         errMsg = `Failed to connect to Hugging Face Space "${apiEndpoint}". Details: ${errMsg}. Please check if the space is active, public, and running.`;
       }
