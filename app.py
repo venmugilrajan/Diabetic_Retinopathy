@@ -72,6 +72,56 @@ clinical_explanations = {
     )
 }
 
+import io
+import base64
+
+class GradCAM:
+    def __init__(self, model, target_layer):
+        self.model = model
+        self.target_layer = target_layer
+        self.gradients = None
+        self.activations = None
+        
+        self.forward_hook = self.target_layer.register_forward_hook(self.save_activation)
+        self.backward_hook = self.target_layer.register_full_backward_hook(self.save_gradient)
+        
+    def save_activation(self, module, input, output):
+        self.activations = output
+        
+    def save_gradient(self, module, grad_input, grad_output):
+        self.gradients = grad_output[0]
+        
+    def __call__(self, x, class_idx):
+        self.model.zero_grad()
+        output = self.model(x)
+        score = output[0, class_idx]
+        score.backward()
+        
+        gradients = self.gradients.cpu().data.numpy()[0]
+        activations = self.activations.cpu().data.numpy()[0]
+        
+        weights = np.mean(gradients, axis=(1, 2))
+        heatmap = np.zeros(activations.shape[1:], dtype=np.float32)
+        
+        for i, w in enumerate(weights):
+            heatmap += w * activations[i]
+            
+        heatmap = np.maximum(heatmap, 0)
+        if heatmap.max() > 0:
+            heatmap /= heatmap.max()
+            
+        return heatmap
+
+    def remove_hooks(self):
+        self.forward_hook.remove()
+        self.backward_hook.remove()
+
+def pil_to_base64(img):
+    buffered = io.BytesIO()
+    img.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+    return f"data:image/png;base64,{img_str}"
+
 class BenGrahamPreprocessing(object):
     def __init__(self, size=300, sigmaX=10):
         self.size = size
@@ -96,11 +146,12 @@ val_transform = transforms.Compose([
 
 def predict(image):
     if image is None:
-        return {}, "Please upload an image."
+        return {}, "Please upload an image.", None, None
     
     img = Image.fromarray(image).convert('RGB')
     img_t = val_transform(img).unsqueeze(0).to(DEVICE)
     
+    # Run prediction
     with torch.no_grad():
         outputs = model(img_t)
         probabilities = torch.nn.functional.softmax(outputs, dim=1)[0]
@@ -110,7 +161,37 @@ def predict(image):
     predicted_class = class_names[predicted_idx]
     explanation = clinical_explanations.get(predicted_class, "No explanation available.")
     
-    return prob_dict, explanation
+    # 1. Preprocessed image base64
+    try:
+        preprocessing = BenGrahamPreprocessing(size=300)
+        preprocessed_img = preprocessing(img)
+        preprocessed_b64 = pil_to_base64(preprocessed_img)
+    except Exception as e:
+        print(f"Error preprocessing image: {e}")
+        preprocessed_b64 = pil_to_base64(img.resize((300, 300)))
+        
+    # 2. Grad-CAM base64
+    try:
+        img_t_cam = img_t.clone().detach()
+        img_t_cam.requires_grad = True
+        grad_cam = GradCAM(model, model.model.conv_head)
+        
+        heatmap = grad_cam(img_t_cam, predicted_idx)
+        orig_resized = np.array(img.resize((300, 300)))
+        
+        heatmap_colored = cv2.applyColorMap(np.uint8(255 * heatmap), cv2.COLORMAP_JET)
+        heatmap_colored = cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB)
+        
+        gradcam_overlay = cv2.addWeighted(orig_resized, 0.6, heatmap_colored, 0.4, 0)
+        gradcam_pil = Image.fromarray(gradcam_overlay)
+        gradcam_b64 = pil_to_base64(gradcam_pil)
+        grad_cam.remove_hooks()
+    except Exception as e:
+        print(f"Error computing Grad-CAM: {e}")
+        gradcam_b64 = pil_to_base64(img.resize((300, 300)))
+    
+    return prob_dict, explanation, preprocessed_b64, gradcam_b64
+
 
 with gr.Blocks(theme="soft") as demo:
     gr.Markdown("# 👁️ Diabetic Retinopathy Diagnostic System")
@@ -124,11 +205,13 @@ with gr.Blocks(theme="soft") as demo:
         with gr.Column(scale=1):
             output_chart = gr.Label(num_top_classes=5, label="Severity Predictions")
             output_reason = gr.Markdown(label="Diagnostic Assessment")
+            output_preprocessed = gr.Textbox(visible=False)
+            output_gradcam = gr.Textbox(visible=False)
             
     submit_btn.click(
         fn=predict, 
         inputs=input_image, 
-        outputs=[output_chart, output_reason]
+        outputs=[output_chart, output_reason, output_preprocessed, output_gradcam]
     )
 
 if __name__ == "__main__":
