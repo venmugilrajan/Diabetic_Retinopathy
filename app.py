@@ -146,7 +146,7 @@ val_transform = transforms.Compose([
 
 def predict(image):
     if image is None:
-        return {}, "Please upload an image.", None, None
+        return {}, "Please upload an image.", None, None, None, None
     
     img = Image.fromarray(image).convert('RGB')
     img_t = val_transform(img).unsqueeze(0).to(DEVICE)
@@ -161,16 +161,19 @@ def predict(image):
     predicted_class = class_names[predicted_idx]
     explanation = clinical_explanations.get(predicted_class, "No explanation available.")
     
-    # 1. Preprocessed image base64
+    # 1. Preprocessed image base64 and PIL
+    preprocessed_pil = None
     try:
         preprocessing = BenGrahamPreprocessing(size=300)
-        preprocessed_img = preprocessing(img)
-        preprocessed_b64 = pil_to_base64(preprocessed_img)
+        preprocessed_pil = preprocessing(img)
+        preprocessed_b64 = pil_to_base64(preprocessed_pil)
     except Exception as e:
         print(f"Error preprocessing image: {e}")
-        preprocessed_b64 = pil_to_base64(img.resize((300, 300)))
+        preprocessed_pil = img.resize((300, 300))
+        preprocessed_b64 = pil_to_base64(preprocessed_pil)
         
-    # 2. Grad-CAM base64
+    # 2. Grad-CAM base64 and PIL
+    gradcam_pil = None
     try:
         img_t_cam = img_t.clone().detach()
         img_t_cam.requires_grad = True
@@ -188,30 +191,115 @@ def predict(image):
         grad_cam.remove_hooks()
     except Exception as e:
         print(f"Error computing Grad-CAM: {e}")
-        gradcam_b64 = pil_to_base64(img.resize((300, 300)))
+        gradcam_pil = img.resize((300, 300))
+        gradcam_b64 = pil_to_base64(gradcam_pil)
     
-    return prob_dict, explanation, preprocessed_b64, gradcam_b64
+    return prob_dict, explanation, preprocessed_b64, gradcam_b64, preprocessed_pil, gradcam_pil
 
 
-with gr.Blocks(theme="soft") as demo:
-    gr.Markdown("# 👁️ Diabetic Retinopathy Diagnostic System")
-    gr.Markdown("Upload a retinal fundus scan to analyze and classify the severity level of Diabetic Retinopathy.")
+custom_css = """
+body, .gradio-container {
+    background: radial-gradient(circle at 50% 0%, #0d1e3d 0%, #070a13 100%) !important;
+    color: #f8fafc !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+.gradio-container {
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+}
+
+/* Premium Card Panels */
+.block, .gradio-container .block {
+    background: rgba(13, 20, 38, 0.45) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-radius: 1.25rem !important;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5) !important;
+    transition: all 0.3s ease !important;
+}
+
+h1 {
+    font-size: 2.5rem !important;
+    font-weight: 800 !important;
+    background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    text-align: center !important;
+    margin-bottom: 0.25rem !important;
+}
+
+h3, p {
+    color: rgba(248, 250, 252, 0.8) !important;
+}
+
+/* Custom Tabs styling */
+.tab-nav button {
+    font-weight: 600 !important;
+    border-radius: 9999px !important;
+    padding: 0.5rem 1rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.tab-nav button.selected {
+    background: rgba(14, 165, 233, 0.15) !important;
+    color: #0ea5e9 !important;
+    border-color: #0ea5e9 !important;
+}
+
+/* Compute Button */
+button.primary {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 700 !important;
+    border-radius: 9999px !important;
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.3) !important;
+    padding: 0.75rem 1.5rem !important;
+    cursor: pointer !important;
+}
+
+button.primary:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 0 25px rgba(14, 165, 233, 0.45) !important;
+}
+"""
+
+with gr.Blocks(theme="soft", css=custom_css) as demo:
+    gr.Markdown("# 👁️ RetinaScan Diagnostic Console")
+    gr.Markdown("<p style='text-align: center; margin-bottom: 2rem;'>Real-time Deep Learning Classification & Explained Diagnostic Mapping</p>")
     
     with gr.Row():
-        with gr.Column(scale=1):
+        with gr.Column(scale=6):
             input_image = gr.Image(label="Upload Retina Scan", sources=["upload", "clipboard"])
-            submit_btn = gr.Button("Analyze Image", variant="primary")
+            submit_btn = gr.Button("Compute Diagnostic Assessment", variant="primary")
             
-        with gr.Column(scale=1):
+            with gr.Tabs():
+                with gr.Tab("Preprocessed View"):
+                    preprocessed_view = gr.Image(label="Graham Local Contrast subtraction", interactive=False)
+                with gr.Tab("AI Grad-CAM"):
+                    gradcam_view = gr.Image(label="Gradient class activation heatmap", interactive=False)
+            
+        with gr.Column(scale=5):
             output_chart = gr.Label(num_top_classes=5, label="Severity Predictions")
-            output_reason = gr.Markdown(label="Diagnostic Assessment")
+            output_reason = gr.Markdown(label="Clinical Assessment Explanation")
+            
+            # Invisible outputs for backward compatibility with Next.js client API
             output_preprocessed = gr.Textbox(visible=False)
             output_gradcam = gr.Textbox(visible=False)
             
     submit_btn.click(
         fn=predict, 
         inputs=input_image, 
-        outputs=[output_chart, output_reason, output_preprocessed, output_gradcam]
+        outputs=[
+            output_chart, 
+            output_reason, 
+            output_preprocessed, 
+            output_gradcam, 
+            preprocessed_view, 
+            gradcam_view
+        ]
     )
 
 if __name__ == "__main__":
