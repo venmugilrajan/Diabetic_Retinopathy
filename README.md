@@ -10,7 +10,6 @@ pinned: false
 license: mit
 python_version: "3.10"
 ---
-# Live view : https://diaretino.vercel.app/
 # 👁️ Diabetic Retinopathy Classification System
 
 ### 🌐 Live Web Demo: [Hugging Face Space](https://huggingface.co/spaces/venmugilrajan/Diabetic_Retinopathy)
