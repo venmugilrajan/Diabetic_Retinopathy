@@ -13,9 +13,14 @@ python_version: "3.10"
 # Live view : https://diaretino.vercel.app/
 # 👁️ Diabetic Retinopathy Classification System
 
+### 🌐 Live Web Demo: [Hugging Face Space](https://huggingface.co/spaces/venmugilrajan/Diabetic_Retinopathy)
+
 An end-to-end deep learning pipeline to classify Diabetic Retinopathy severity from retinal fundus images using PyTorch, EfficientNet-B3, Focal Loss, and a premium Next.js dashboard + Gradio console.
 
+---
+
 ## 📁 Project Structure
+
 ```
 ├── src/                              # Next.js App Router codebase
 │   └── app/                          # Main pages, layouts, and API routes
@@ -30,6 +35,33 @@ An end-to-end deep learning pipeline to classify Diabetic Retinopathy severity f
 ├── next.config.js                    # Next.js bundler settings
 └── README.md                         # Project documentation
 ```
+
+---
+
+## 📊 Model Performance & Metrics
+
+The deep learning model is built using an **EfficientNet-B3** backbone fine-tuned on the APTOS 2019 / Kaggle DR dataset. To combat significant class imbalances, the training utilizes a Class-Weighted Focal Loss function.
+
+### 📈 Training Progress Summary
+* **Final Epoch (Epoch 15)**:
+  * **Training Accuracy**: 72.87%
+  * **Validation Accuracy**: 72.54%
+  * **Validation Loss**: 0.2603
+
+### 📋 Classification Report (Validation Set)
+The model achieves an overall **accuracy of 71%** across 5 classification levels:
+
+| Diagnosis Class | Severity Level | Precision | Recall | F1-Score | Support |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| **Class 0** | No DR | 0.97 | 0.93 | 0.95 | 364 |
+| **Class 1** | Mild NPDR | 0.34 | 0.62 | 0.44 | 58 |
+| **Class 2** | Moderate NPDR | 0.82 | 0.40 | 0.54 | 211 |
+| **Class 3** | Severe NPDR | 0.34 | 0.78 | 0.47 | 49 |
+| **Class 4** | Proliferative DR | 0.34 | 0.42 | 0.38 | 50 |
+| **Average / Total** | | | | | |
+| **Accuracy** | | | | **0.71** | 732 |
+| **Macro Average** | | 0.56 | 0.63 | 0.56 | 732 |
+| **Weighted Average** | | 0.79 | 0.71 | 0.72 | 732 |
 
 ---
 
