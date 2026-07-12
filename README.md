@@ -64,6 +64,21 @@ The model achieves an overall **accuracy of 71%** across 5 classification levels
 
 ---
 
+## 🖼️ Results and Outputs
+
+### Case 1: Proliferative Diabetic Retinopathy (PDR)
+Below is the system console output for a case diagnosed with Proliferative DR. The preprocessed view highlights dense microaneurysms and abnormal vessel networks:
+
+![Proliferative DR Diagnostic Interface](assets/proliferative_dr.png)
+
+### Case 2: Normal Retina (No DR)
+Below is the output for a healthy retina. The preprocessed view reveals clear macular areas, uniform vessel maps, and zero hemorrhages:
+
+![Healthy Retina Diagnostic Interface](assets/healthy_retina.png)
+
+---
+
+
 ## 🎨 Premium Features
 
 1. **Dual Premium Modes**: Elegant transition between dark cyber-obsidian and glassmorphic light theme presets.
